@@ -24,3 +24,5 @@
 
 ## 📸 畫面展示
 ![介面預覽]<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/663832b2-39bd-49e7-acde-2800464e1b03" />
+<img width="1180" height="907" alt="image" src="https://github.com/user-attachments/assets/ecf6dbd8-756e-4d0b-8429-444eab48ed24" />
+
