@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>鳴潮數據分析儀 - 專業版</title>
+    <style>
+        body { background-color: #0f1112; color: #e0e0e0; font-family: 'PingFang TC', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .dashboard { display: grid; grid-template-columns: 340px 1fr; gap: 20px; width: 1150px; }
+        
+        /* 面板區 */
+        .panel-section { background: #1a1d1e; border: 1px solid #33efcd; padding: 20px; border-radius: 10px; height: fit-content; }
+        .panel-item { display: flex; justify-content: space-between; margin: 8px 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 0.95rem; }
+        .panel-val { color: #33efcd; font-weight: bold; }
+        
+        /* 權重防呆 */
+        .weight-box { margin-top: 20px; background: #252829; padding: 15px; border-radius: 8px; border: 1px solid #444; }
+        .weight-grid { display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 0.85rem; }
+        .weight-row { display: flex; justify-content: space-between; align-items: center; }
+        .weight-input { width: 50px; background: #000; color: #33efcd; border: 1px solid #333; padding: 3px; border-radius: 4px; text-align: center; }
+        #weight-warn { color: #ff4d4d; font-size: 0.75rem; margin-top: 8px; display: none; }
+
+        /* 聲骸區 */
+        .echo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .echo-card { background: #1a1d1e; border: 1px solid #444; border-radius: 8px; padding: 12px; text-align: center; border: 2px solid transparent; transition: 0.3s; }
+        .echo-icon { width: 70px; height: 70px; background: #000; margin: 0 auto 10px; border-radius: 50%; border: 1px solid #333; object-fit: cover; }
+        .echo-score { font-size: 1.2rem; color: #33efcd; font-weight: bold; margin-bottom: 5px; }
+        .echo-details { font-size: 0.75rem; color: #aaa; text-align: left; line-height: 1.4; border-top: 1px solid #333; padding-top: 5px; }
+
+        /* 期望值顯示 */
+        .exp-container { background: #1a1d1e; margin-top: 20px; padding: 25px; border-radius: 10px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
+        .exp-val { font-size: 2.8rem; color: #33efcd; font-weight: bold; }
+
+        button { background: #33efcd; border: none; padding: 12px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-top: 10px; }
+        button.secondary { background: #2a2a2a; color: #fff; border: 1px solid #555; width: auto; margin-top: 0; }
+    </style>
+</head>
+<body>
+
+    <h1 style="color: #33efcd; letter-spacing: 3px; margin-bottom: 30px;">WAVEWAVES DATA CENTER</h1>
+
+    <div class="dashboard">
+        <div class="panel-section">
+            <h2 style="font-size: 1.1rem; color: #33efcd; margin-top: 0;">角色總面板 (最高值繼承)</h2>
+            <div id="panelDisplay">
+                <div class="panel-item"><span>攻擊力</span> <span class="panel-val" id="p-atk">0</span></div>
+                <div class="panel-item"><span>暴擊率</span> <span class="panel-val" id="p-cr">0%</span></div>
+                <div class="panel-item"><span>暴擊傷害</span> <span class="panel-val" id="p-cd">0%</span></div>
+                <div class="panel-item"><span>屬性加成</span> <span class="panel-val" id="p-attr">0%</span></div>
+                <div style="margin-top: 10px; color: #888; font-size: 0.8rem; border-top: 1px solid #444; padding-top: 10px;">特定類型加成：</div>
+                <div class="panel-item"><span>普攻加成</span> <span class="panel-val" id="p-bonus-normal">0%</span></div>
+                <div class="panel-item"><span>重擊加成</span> <span class="panel-val" id="p-bonus-heavy">0%</span></div>
+                <div class="panel-item"><span>技能加成</span> <span class="panel-val" id="p-bonus-skill">0%</span></div>
+                <div class="panel-item"><span>解放加成</span> <span class="panel-val" id="p-bonus-ult">0%</span></div>
+            </div>
+            <button onclick="document.getElementById('filePanel').click()">掃描角色總面板</button>
+            <input type="file" id="filePanel" hidden onchange="uploadData(this, 'panel')">
+
+            <div class="weight-box">
+                <h3 style="font-size: 0.9rem; color: #33efcd; margin-top: 0;">輸出佔比權重 (%)</h3>
+                <div class="weight-grid">
+                    <div class="weight-row">普攻佔比 <input type="number" id="w-normal" class="weight-input weight-f" value="20" oninput="calculateFinal()"></div>
+                    <div class="weight-row">重擊佔比 <input type="number" id="w-heavy" class="weight-input weight-f" value="20" oninput="calculateFinal()"></div>
+                    <div class="weight-row">技能佔比 <input type="number" id="w-skill" class="weight-input weight-f" value="20" oninput="calculateFinal()"></div>
+                    <div class="weight-row">解放佔比 <input type="number" id="w-ult" class="weight-input weight-f" value="20" oninput="calculateFinal()"></div>
+                    <div class="weight-row">其他佔比 <input type="number" id="w-other" class="weight-input weight-f" value="20" oninput="calculateFinal()"></div>
+                </div>
+                <div id="weight-warn">⚠️ 權重總和應為 100% (目前: <span id="weight-total">100</span>%)</div>
+            </div>
+        </div>
+
+        <div>
+            <div class="echo-grid" id="echoGrid"></div>
+            <div class="exp-container">
+                <div>
+                    <div style="color: #888; font-size: 0.9rem;">預估傷害期望值 (動作權重歸一化)</div>
+                    <div id="expected-dmg" class="exp-val">0</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="secondary" onclick="document.getElementById('fileEcho').click()">掃描聲骸 (Slot <span id="currentSlotDisp">1</span>)</button>
+                    <input type="file" id="fileEcho" hidden onchange="uploadData(this, 'echo')">
+                    <button class="secondary" style="background: #ff4d4d;" onclick="location.reload()">重置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let currentSlot = 1;
+    let panelState = { 
+        攻擊: 0, 暴擊: 0, 暴擊傷害: 0, 屬性加成: 0,
+        普攻加成: 0, 重擊加成: 0, 技能加成: 0, 解放加成: 0 
+    };
+
+    function initEchoGrid() {
+        const grid = document.getElementById('echoGrid');
+        for (let i = 1; i <= 5; i++) {
+            grid.innerHTML += `
+                <div class="echo-card" id="card-${i}" onclick="setSlot(${i})">
+                    <div style="font-size: 0.7rem; color: #888; margin-bottom:5px;">SLOT ${i}</div>
+                    <img id="icon-${i}" class="echo-icon" src="https://via.placeholder.com/80?text=None">
+                    <div id="score-${i}" class="echo-score">0.0</div>
+                    <div id="details-${i}" class="echo-details">
+                        暴率: -%<br>暴傷: -%<br>攻%: -%
+                    </div>
+                </div>
+            `;
+        }
+        setSlot(1);
+    }
+
+    function setSlot(i) {
+        currentSlot = i;
+        document.getElementById('currentSlotDisp').innerText = i;
+        document.querySelectorAll('.echo-card').forEach(c => c.style.borderColor = "transparent");
+        document.getElementById(`card-${i}`).style.borderColor = "#33efcd";
+    }
+
+    function calculateFinal() {
+        const atk = panelState.攻擊 || 0;
+        const cr = (panelState.暴擊 || 0) / 100;
+        const cd = (panelState.暴擊傷害 || 0) / 100;
+        const attr = (panelState.屬性加成 || 0) / 100;
+
+        const critMult = (1 - cr) + (cr * cd);
+
+        // 取得權重
+        let weights = {
+            normal: parseFloat(document.getElementById('w-normal').value) || 0,
+            heavy: parseFloat(document.getElementById('w-heavy').value) || 0,
+            skill: parseFloat(document.getElementById('w-skill').value) || 0,
+            ult: parseFloat(document.getElementById('w-ult').value) || 0,
+            other: parseFloat(document.getElementById('w-other').value) || 0
+        };
+
+        const totalW = weights.normal + weights.heavy + weights.skill + weights.ult + weights.other;
+        
+        // 防呆提醒
+        const warn = document.getElementById('weight-warn');
+        document.getElementById('weight-total').innerText = totalW;
+        warn.style.display = (totalW !== 100) ? "block" : "none";
+
+        // 歸一化處理 (Normalization) 避免計算崩潰
+        const norm = (val) => totalW === 0 ? 0 : val / totalW;
+
+        const eNormal = atk * critMult * (1 + attr + (panelState.普攻加成/100)) * norm(weights.normal);
+        const eHeavy  = atk * critMult * (1 + attr + (panelState.重擊加成/100)) * norm(weights.heavy);
+        const eSkill  = atk * critMult * (1 + attr + (panelState.技能加成/100)) * norm(weights.skill);
+        const eUlt    = atk * critMult * (1 + attr + (panelState.解放加成/100)) * norm(weights.ult);
+        const eOther  = atk * critMult * (1 + attr) * norm(weights.other);
+
+        document.getElementById('expected-dmg').innerText = Math.floor(eNormal + eHeavy + eSkill + eUlt + eOther).toLocaleString();
+    }
+
+    function updatePanelUI(newData) {
+        // 繼承邏輯：屬性加成取最高值，其他欄位有值才更新
+        Object.keys(panelState).forEach(key => {
+            if (newData[key] !== undefined && newData[key] !== 0) {
+                if (key === "屬性加成") {
+                    panelState[key] = Math.max(panelState[key], newData[key]);
+                } else {
+                    panelState[key] = newData[key];
+                }
+            }
+        });
+
+        document.getElementById('p-atk').innerText = panelState.攻擊;
+        document.getElementById('p-cr').innerText = panelState.暴擊 + "%";
+        document.getElementById('p-cd').innerText = panelState.暴擊傷害 + "%";
+        document.getElementById('p-attr').innerText = panelState.屬性加成 + "%";
+        document.getElementById('p-bonus-normal').innerText = panelState.普攻加成 + "%";
+        document.getElementById('p-bonus-heavy').innerText = panelState.重擊加成 + "%";
+        document.getElementById('p-bonus-skill').innerText = panelState.技能加成 + "%";
+        document.getElementById('p-bonus-ult').innerText = panelState.解放加成 + "%";
+        
+        calculateFinal();
+    }
+
+    function updateEchoUI(slot, data, iconUrl) {
+        document.getElementById(`score-${slot}`).innerText = data.分數 || "0.0";
+        if(iconUrl) document.getElementById(`icon-${slot}`).src = iconUrl + "?t=" + new Date().getTime();
+        
+        // 恢復顯示詳細三項數值
+        document.getElementById(`details-${slot}`).innerHTML = `
+            暴率: ${data.暴擊率 || 0}%<br>
+            暴傷: ${data.暴擊傷害 || 0}%<br>
+            攻%: ${data.攻擊百分比 || 0}%
+        `;
+    }
+
+    async function uploadData(input, type) {
+        if (!input.files[0]) return;
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+        if (type === 'echo') formData.append('slot', currentSlot);
+
+        try {
+            const url = type === 'panel' ? '/analyze-panel' : '/analyze-echo';
+            const response = await fetch(`http://127.0.0.1:8000${url}`, { method: 'POST', body: formData });
+            const res = await response.json();
+            if (res.status === "success") {
+                type === 'panel' ? updatePanelUI(res.data) : updateEchoUI(res.slot, res.data, res.icon_url);
+            }
+        } catch (err) { alert("連線失敗"); }
+    }
+
+    window.onload = initEchoGrid;
+</script>
+</body>
+</html>
