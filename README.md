@@ -23,6 +23,8 @@
 
 
 ## 📸 畫面展示
-![介面預覽]<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/663832b2-39bd-49e7-acde-2800464e1b03" />
+![介面預覽]
+<img width="1920" height="1080" alt="角色面板截圖" src="https://github.com/user-attachments/assets/47149ad3-fa12-4790-a6fd-773d0521e2e7" />
+<img width="1920" height="1080" alt="聲骸測試" src="https://github.com/user-attachments/assets/3819a59c-9c3b-4d34-b436-a5f6fbb5c969" />
 <img width="1180" height="907" alt="image" src="https://github.com/user-attachments/assets/ecf6dbd8-756e-4d0b-8429-444eab48ed24" />
 
